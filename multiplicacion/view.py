@@ -31,6 +31,7 @@ def EscribirResultado(message, user_name ,a ,b):
     f.close()
     return message
 
+
 @app.route('/health',methods = ['GET'])
 def Health():
     return "ok", 200

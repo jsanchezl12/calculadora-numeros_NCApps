@@ -9,10 +9,10 @@ kind: Deployment
 # Metadatos del elemento
 metadata:
   # Nombre
-  name: calculadora-numeros
+  name: memoria
   # Etiqueta del Deployment
   labels:
-    app: calculadora-numeros
+    app: memoria
 # Especificaciones del elemento
 spec:
   replicas: 1
@@ -21,36 +21,22 @@ spec:
   selector:
     # En este caso va a seleccionar aquellos que coincidan con el nombre del deploy
     matchLabels:
-      app: calculadora-numeros
-  # En este elemento definimos la politica de actualizacion del despliegue
-  # No esta al alcance de este laboratorio, pero invitamos al lector a consultar mas sobre
-  # tecnicas de actualización de despliegues como Rolling Update y Blue/Green
-    strategy:
-    rollingUpdate:
-      maxSurge: 2
-      maxUnavailable: 1
-    type: RollingUpdate 
-  
-  
-  strategy:
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 20%
-    type: RollingUpdate        
+      app: memoria
+
   # En esta sección definimos el contenido del pod y declaramos los contenedores
   template:
     metadata:
       labels:
         # Esta es la etiqueta que se le asigna al pod, debe ser igual al selector (linea 24)
-        app: calculadora-numeros
+        app: memoria
     spec:
       # Declaracion de contenedores
       # name: Nombre del contenedor
       # image: Nombre de la imagen, por defecto buscara en Docker Hub o en el repositorio privado
       #        configurado en K8s
       containers:
-        - name: calculadora-numeros
-          image: us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/suma:1.1
+        - name: memoria
+          image: us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/memory:1.1
           resources:
             requests:
               memory: "64Mi"
@@ -58,14 +44,14 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "500m"
-          ports:
-            - containerPort: 4000
           env:
             - name: "SQLALCHEMY_DATABASE_URI"
               valueFrom:
                 secretKeyRef:
                   name: appsecrets 
                   key: uri
+          ports:
+            - containerPort: 4000
           # Realizar pull siempre a la imagen
           imagePullPolicy: Always
       volumes:
@@ -79,11 +65,11 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: calculadora-numeros
+  name: servicio-memoria
 spec:
   type: LoadBalancer
   selector:
-    app: calculadora-numeros
+    app: memoria
   # Declaracion y redireccion del trafico por los puertos
   # En este caso, estamos ocupando el puerto 80 para la conexión HTTP
   # y lo estamos redirigiendo al 3000 de la red virtual del pod

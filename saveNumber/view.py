@@ -19,6 +19,7 @@ app.debug = True
 db.init_app(app)
 db.create_all()
 
+
 @app.route('/guardar_numero',methods = ['POST'])
 def SaveNumber():
     number = request.json["num_1"]
@@ -26,6 +27,7 @@ def SaveNumber():
     db.session.add(new_number)
     db.session.commit()
     return {"mensaje": f"numero {new_number.value} guardado correctamente."}
+
 
 @app.route('/ultimo_numero',methods = ['GET'])
 def GetNumber():

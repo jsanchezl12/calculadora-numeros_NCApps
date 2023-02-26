@@ -22,6 +22,7 @@ def Suma():
 
         return {"message": EscribirResultado(message, user_name, numero1, numero2), "result": numero1 + numero2}, 200
 
+
 def EscribirResultado(message, user_name ,a ,b):
     if os.getenv("write_result") == "not_show" or not a or not b:
         return message
@@ -29,7 +30,7 @@ def EscribirResultado(message, user_name ,a ,b):
     f.write(f"Hola {user_name}! Al sumar {a} y {b} se obtiene como resultado {a+b} ")
     f.close()
     return message
-    
+
 @app.route('/health',methods = ['GET'])
 def Health():
     return "ok", 200
