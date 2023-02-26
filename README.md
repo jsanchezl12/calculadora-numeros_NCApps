@@ -278,3 +278,13 @@ curl --location --request POST 'http://35.186.228.169/multiplicar' \
 }'
 ```
 
+# Pasos para configurar Service Discovery
+
+[Link del Tutorial](https://misovirtual.virtual.uniandes.edu.co/codelabs/dann-service-discovery/index.html?index=..%2F..desarrollo-aplicaciones-nube#0)
+
+
+1. Preparar Ambiente
+```
+kubectl delete all --all -n default
+kubectl delete ingress gateway-ingress-8 
+````
