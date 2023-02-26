@@ -234,3 +234,47 @@ curl --location --request GET 'http://34.29.74.233:80/ultimo_numero' \
     "num_1": 399
 }'
 ```
+
+# Pasos para configurar Ingress
+1. Preparar Ambiente
+[Link Tutorial](https://misovirtual.virtual.uniandes.edu.co/codelabs/dann-ingress-kubernetes/index.html?index=..%2F..desarrollo-aplicaciones-nube#0)
+```
+kubectl delete all --all -n default
+````
+2. Publicar imagenes con las que se va a trabajar
+```
+docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/multiplicacion:1.2 .
+docker push us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/multiplicacion:1.2
+```
+3. Se configura el ingress teniendo en cuenta la siguiente informacion
+
+    - Metadata: Acá se define el nombre de cómo llamaremos nuestro ingress, en este caso gateway-ingress.
+    - kind: A diferencia de los anteriores fragmentos de este archivo que corresponden a kind de tipo service, en esta ocasión corresponde a un kind de tipo ingress.
+    - rules: Acá se definen reglas de tráfico como los endpoints asociados a cada microservicio y el puerto que exponen para redirigir el tráfico.
+    - service: Describe el contenido de cada servicio usado dentro del ingress.
+    - name: Nombre único del microservicio (Este debe coincidir con el asignado en linear arriba, debe llamarse igual para que kubernetes lo reconozca)
+    - pathType: El campo pathType especifica una de las tres formas en que se debe interpretar la ruta de un objeto de ingreso:
+        - ImplementationSpecific: la coincidencia de prefijo de ruta se delega al controlador de ingreso (IngressClass).
+        - Exact: coincide exactamente con la ruta de la URL (se distingue entre mayúsculas y minúsculas)
+        - Prefix: coincidencias basadas en un prefijo de ruta de URL dividido por /. La coincidencia distingue entre mayúsculas y minúsculas y se realiza elemento por elemento de ruta. 
+4. Aplicamos los cambios
+```
+kubectl apply -f k8s-deployments.yml
+```
+5. Probamos que los servicios esten funcionando
+```
+curl --location --request POST 'http://35.186.228.169/suma' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "num_1": 379,
+    "num_2": 1
+}'
+
+curl --location --request POST 'http://35.186.228.169/multiplicar' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "num_1": 390,
+    "num_2": 1
+}'
+```
+

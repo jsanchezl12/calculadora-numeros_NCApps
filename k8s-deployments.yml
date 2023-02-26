@@ -19,12 +19,11 @@ spec:
     spec:
       containers:
         - name: suma
-          image: <IMAGE-URI>
+          image: us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/suma:1.1
           ports:
             - containerPort: 4000
           # Realizar pull siempre a la imagen
           imagePullPolicy: Always
-
 ---
 apiVersion: cloud.google.com/v1
 kind: BackendConfig
@@ -76,7 +75,7 @@ spec:
     spec:
       containers:
         - name: multiplicacion
-          image: <IMAGE-URI>
+          image: us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/multiplicacion:1.2
           ports:
             - containerPort: 4000
           imagePullPolicy: Always
