@@ -9,10 +9,10 @@ kind: Deployment
 # Metadatos del elemento
 metadata:
   # Nombre
-  name: suma
+  name: calculadora-numeros
   # Etiqueta del Deployment
   labels:
-    app: suma
+    app: calculadora-numeros
 # Especificaciones del elemento
 spec:
   replicas: 1
@@ -21,20 +21,35 @@ spec:
   selector:
     # En este caso va a seleccionar aquellos que coincidan con el nombre del deploy
     matchLabels:
-      app: suma
+      app: calculadora-numeros
+  # En este elemento definimos la politica de actualizacion del despliegue
+  # No esta al alcance de este laboratorio, pero invitamos al lector a consultar mas sobre
+  # tecnicas de actualización de despliegues como Rolling Update y Blue/Green
+    strategy:
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+    type: RollingUpdate 
+  
+  
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 20%
+    type: RollingUpdate        
   # En esta sección definimos el contenido del pod y declaramos los contenedores
   template:
     metadata:
       labels:
         # Esta es la etiqueta que se le asigna al pod, debe ser igual al selector (linea 24)
-        app: suma
+        app: calculadora-numeros
     spec:
       # Declaracion de contenedores
       # name: Nombre del contenedor
       # image: Nombre de la imagen, por defecto buscara en Docker Hub o en el repositorio privado
       #        configurado en K8s
       containers:
-        - name: suma
+        - name: calculadora-numeros
           image: us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/suma:1.1
           resources:
             requests:
@@ -45,8 +60,18 @@ spec:
               cpu: "500m"
           ports:
             - containerPort: 4000
+          env:
+            - name: "SQLALCHEMY_DATABASE_URI"
+              valueFrom:
+                secretKeyRef:
+                  name: appsecrets 
+                  key: uri
           # Realizar pull siempre a la imagen
           imagePullPolicy: Always
+      volumes:
+        - name: appsecrets-volume
+          secret:
+            secretName: appsecrets
 
 # Vamos a especificar el balanceador de carga en este mismo archivo
 # para ello vamos a crear otro documento separado, esto se hace con el operador "---"
@@ -54,11 +79,11 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: servicio-suma
+  name: calculadora-numeros
 spec:
   type: LoadBalancer
   selector:
-    app: suma
+    app: calculadora-numeros
   # Declaracion y redireccion del trafico por los puertos
   # En este caso, estamos ocupando el puerto 80 para la conexión HTTP
   # y lo estamos redirigiendo al 3000 de la red virtual del pod
