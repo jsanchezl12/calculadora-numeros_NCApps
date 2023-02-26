@@ -118,6 +118,8 @@ gcloud container clusters get-credentials uniandes-misw-cloud-native-k8s --regio
     - Eliminacion: ```kubectl delete -f K8s-service.yml```
     - Actualizacion: ```kubectl apply -f K8s-service.yml```
 
+**_NOTA:_** Instalar kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/
+
 7. revisamos pods
 
 ```kubectl get pods```
