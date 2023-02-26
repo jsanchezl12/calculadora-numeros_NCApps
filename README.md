@@ -150,3 +150,85 @@ curl --location --request POST 'http://34.69.180.86:80/suma' \
 }'
 ```
 
+# Pasos para crear el servicio con una BD en gcp
+[Link Tutorial](https://misovirtual.virtual.uniandes.edu.co/codelabs/dann-tutorial-sql/index.html?index=..%2F..desarrollo-aplicaciones-nube#0)
+
+1. Se debe hacer pull de la imagen pero con version vDatabase
+```
+docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/memory:1.1 .
+docker push us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/memory:1.1
+docker run --platform linux/amd64 -p 4000:4000 us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/memory:1.1
+```
+2. crear Subred para la BD
+
+    - Purpose: Función que estará ejecutando la subred y rango de direcciones usadas.
+    - Addresses: Rango de direcciones asociadas a la subred.
+    - Prefix-length: La nueva longitud del prefijo de la subred. Debe ser más pequeño que el original y en el espacio de direcciones privadas 10.0.0.0/8, 172.16.0.0/12 o 192.168.0.0/16 definido en RFC 1918.
+    - Network: Red creada para asociar la subred (Recuerde que si siguio el tutorial de kubernetes, puede usar la misma allí creada).
+    - Project: Id del proyecto creado, puede consultarlo en el banner inicial de GCP.
+
+```
+# Crear subred
+gcloud compute addresses create red-dbs-tutoriales --global --purpose=VPC_PEERING --addresses=192.168.0.0 --prefix-length=24 --network=vpn-tutoriales-misw --project=gcloudprojectg14
+# Otorgar acceso a los servicios de GCP
+gcloud services vpc-peerings connect --service=servicenetworking.googleapis.com --ranges=red-dbs-tutoriales --network=vpn-tutoriales-misw --project=gcloudprojectg14
+# Crear Regla de Firewall
+gcloud compute firewall-rules create allow-db-ingress --direction=INGRESS --priority=1000 --network=vpn-tutoriales-misw --action=ALLOW --rules=tcp:5432 --source-ranges=192.168.1.0/24 --target-tags=basesdedatos --project=gcloudprojectg14
+```
+
+3. Crear bd Relacional
+
+    - Nombre: misw-tutorial-calculadora-db
+    - Contraseña: Generada, más no olvide guardarla en un lugar de fácil acceso. La necesitará más adelante. (DreamTeam123*)
+    - Versión: PostgreSQL 14
+    - Región: us-central1
+    - Disponibilidad zonal: Única
+    - Tipo de máquina: De núcleo compartido, 1 core y 1.7 GB de RAM
+    - Almacenamiento 10 GB de HDD
+    - No habilitar los aumentos automáticos de almacenamiento.
+    - Asignación de IP de la instancia: privada
+    - Red: vpn-tutoriales-misw
+    - Rango de IP asignado: red-dbs-tutoriales
+    - Etiqueta: basesdedatos
+
+4. Configurar Secrets.yaml
+```
+apiVersion: v1
+stringData:
+  uri : "postgresql+psycopg2://postgres:DREAMTEAM1234*@192.168.0.3/postgres"
+kind: Secret
+metadata:
+  name: appsecrets
+```
+
+5. aplicamos los secretos los cuales estan referenciados en el archivo de k8s-service.yml (spec -> template -> spec -> containers -> env -> secretKeyRef -> name)
+
+```
+kubectl apply -f secrets.yaml
+```
+
+6. Cambiamos la uri de la imagen en el archivo de k8s-service.yml (spec -> template -> spec -> containers -> image)
+
+```
+us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/memory:1.1
+```
+
+7. Aplicamos los cambios
+```
+kubectl apply -f k8s-service.yml
+```
+
+8. Hacemos un request teniendo la URL del balanceador de carga con el siguiente comando
+```
+curl --location --request POST 'http://34.29.74.233:80/guardar_numero' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "num_1": 399
+}'
+
+curl --location --request GET 'http://34.29.74.233:80/ultimo_numero' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "num_1": 399
+}'
+```
