@@ -240,7 +240,7 @@ curl --location --request GET 'http://34.29.74.233:80/ultimo_numero' \
 [Link Tutorial](https://misovirtual.virtual.uniandes.edu.co/codelabs/dann-ingress-kubernetes/index.html?index=..%2F..desarrollo-aplicaciones-nube#0)
 ```
 kubectl delete all --all -n default
-````
+```
 2. Publicar imagenes con las que se va a trabajar
 ```
 docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/multiplicacion:1.2 .
@@ -261,7 +261,11 @@ docker push us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-cal
 ```
 kubectl apply -f k8s-deployments.yml
 ```
-5. Probamos que los servicios esten funcionando
+5. Revisamos Ingress
+```
+kubectl describe Ingress gateway-ingress
+```
+6. Probamos que los servicios esten funcionando
 ```
 curl --location --request POST 'http://35.186.228.169/suma' \
 --header 'Content-Type: application/json' \
@@ -286,5 +290,77 @@ curl --location --request POST 'http://35.186.228.169/multiplicar' \
 1. Preparar Ambiente
 ```
 kubectl delete all --all -n default
-kubectl delete ingress gateway-ingress-8 
+kubectl delete ingress gateway-ingress
+```
+
+2. Publicar imagenes con las que se va a trabajar
+```
+docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/suma:3.0 .
+docker push us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/suma:3.0
+docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/multiplicacion:3.0 .
+docker push us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/multiplicacion:3.0
+docker build --platform linux/amd64 -t us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/exponencial:3.0 .
+docker push us-central1-docker.pkg.dev/gcloudprojectg14/uniandes-misw-native-calculadora-app/exponencial:3.0
+```
+
+3. Verificar informacion de Ingress y Service
+
+4. Aplicar cambios
+```
+kubectl apply -f k8s-deployments.yml
+```
+
+5. Revisamos Ingress
+```
+kubectl describe Ingress gateway-ingress
+gcloud compute network-endpoint-groups list
+gcloud compute instances list --zones us-central1-b
+```
+
+6. Probamos que los servicios esten funcionando
+```
+# Suma
+curl --location --request POST 'http://34.149.196.128/suma' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "num_1": 379,
+    "num_2": 1
+}'
+
+# Multiplicacion
+curl --location --request POST 'http://34.149.196.128/multiplicar' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "num_1": 5,
+    "num_2": 10
+}'
+
+# Exponencial
+curl --location --request POST 'http://34.149.196.128/exponencial' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "numero": 2,
+    "potencia": 3
+}'
+
+```
+
+# Pasos para configurar observabilidad en kubernetes
+
+1. Instalar Helm https://helm.sh/docs/intro/install/
+
+2. crear namespace observability
+``` 
+kubectl create namespace observability
+```
+3. Revisar namespaces
+```
+kubectl get namespaces
+```
+4. Instalar prometheus
+```
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add stable https://charts.helm.sh/stable
+helm repo update
 ````
+
